@@ -1,10 +1,13 @@
 "use client"
 
-const rooms = [
-  { id: "1", name: "General" },
-  { id: "2", name: "Random" },
-  { id: "3", name: "Tech Talk" },
-]
+import axiosInstance from "@/lib/axiosConfig"
+import { closeWebSocket, connectToWebSocket } from "@/lib/websocket"
+import { useEffect, useState } from "react"
+
+type Room = {
+  id: string
+  name: string
+}
 
 interface RoomListProps {
   onSelectRoom: (roomId: string) => void
@@ -12,13 +15,53 @@ interface RoomListProps {
 }
 
 export default function RoomList({ onSelectRoom, selectedRoom }: RoomListProps) {
+  const [rooms, setRooms] = useState<Room[]>([])
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const response = await axiosInstance.get(`/user/rooms`)
+        setRooms(response.data)
+      } catch (err) {
+        setError("Failed to fetch rooms. Please try again.")
+      }
+    }
+
+    fetchRooms()
+
+    return () => {
+      // Cleanup WebSocket connection when the component unmounts
+      closeWebSocket()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (selectedRoom) {
+      const socket = connectToWebSocket(selectedRoom)
+      socket.onmessage = (event) => {
+        const data = JSON.parse(event.data)
+        console.log("Received message:", data)
+      }
+    }
+
+    return () => {
+      // Cleanup WebSocket when the selectedRoom changes
+      closeWebSocket()
+    }
+  }, [selectedRoom])
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>
+  }
+
   return (
     <div className="space-y-2 p-4">
-      {rooms.map((room) => (
+      {rooms?.map((room) => (
         <button
           key={room.id}
           onClick={() => onSelectRoom(room.id)}
-          className={`w-full text-left p-2 rounded-lg transition-colors ${
+          className={`w-full text-left px-4 py-2 rounded-xl transition-colors ${
             selectedRoom === room.id ? "bg-light-orange text-white" : "hover:bg-gray-100"
           }`}
         >
@@ -28,4 +71,3 @@ export default function RoomList({ onSelectRoom, selectedRoom }: RoomListProps) 
     </div>
   )
 }
-

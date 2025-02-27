@@ -1,47 +1,43 @@
-let socket: WebSocket | null = null
+let socket: WebSocket | null = null;
 
 export function connectToWebSocket(roomId: string): WebSocket {
-  if (socket) {
-    socket.close()
+  // Close the previous socket connection if it exists
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.close();
   }
 
-  const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL}/ws/${roomId}`
-  socket = new WebSocket(wsUrl)
+  // Create a new WebSocket connection
+  const wsUrl = `ws://localhost:9090/ws?room_id=${roomId}`;
+  socket = new WebSocket(wsUrl);
 
+  // WebSocket event handlers
   socket.onopen = () => {
-    console.log("WebSocket connection established")
-  }
+    console.log("WebSocket connection established");
+  };
 
   socket.onerror = (error) => {
-    console.error("WebSocket error:", error)
-  }
+    console.error("WebSocket error:", error);
+  };
 
-  socket.onclose = () => {
-    console.log("WebSocket connection closed")
-  }
+  socket.onclose = (event) => {
+    console.log("WebSocket connection closed", event);
+    // You could handle reconnection logic here if needed
+  };
 
-  return socket
+  return socket;
 }
 
 export function sendMessage(roomId: string, message: string) {
   if (socket && socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({ roomId, message }))
+    socket.send(JSON.stringify({ roomId, message }));
   } else {
-    console.error("WebSocket is not connected")
+    console.error("WebSocket is not connected");
   }
 }
 
-export async function registerUser(username: string, password: string): Promise<void> {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/register`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ username, password }),
-  })
-
-  if (!response.ok) {
-    throw new Error("Registration failed")
+export function closeWebSocket() {
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.close();
   }
+  socket = null;
 }
-

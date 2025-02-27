@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { registerUser } from "@/lib/websocket"
+import axiosInstance from "@/lib/axiosConfig"
 
 export default function RegisterForm() {
   const [username, setUsername] = useState("")
@@ -23,8 +23,10 @@ export default function RegisterForm() {
     }
 
     try {
-      await registerUser(username, password)
-      router.push("/login")
+      const response = await axiosInstance.post("/user/register", { username, password })
+      if (response.status === 201) {
+        router.push("/login")
+      }
     } catch (err) {
       setError("Registration failed. Please try again.")
     }

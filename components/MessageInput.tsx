@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import axiosInstance from "@/lib/axiosConfig"
+import { saveMessage } from "@/lib/indexedDB"
 
 export default function MessageInput({ roomId }: { roomId: string }) {
   const [message, setMessage] = useState("")
@@ -13,7 +14,10 @@ export default function MessageInput({ roomId }: { roomId: string }) {
     e.preventDefault()
     if (message.trim()) {
       try {
-        await axiosInstance.post(`/rooms/${roomId}/messages`, { text: message })
+        const response = await axiosInstance.post(`/user/messages`, { room_id: roomId, content: message })
+        
+        await saveMessage(response.data)
+
         setMessage("")
         setError(null)
       } catch (err) {

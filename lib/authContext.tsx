@@ -7,7 +7,7 @@ import axiosInstance from "./axiosConfig"
 
 interface AuthContextType {
   isAuthenticated: boolean
-  login: (token: string, refreshToken: string) => void
+  login: (token: string) => void
   logout: () => void
   token: string | null
 }
@@ -25,17 +25,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const login = (newToken: string, refreshToken: string) => {
+  const login = (newToken: string) => {
     setToken(newToken)
     localStorage.setItem("token", newToken)
-    localStorage.setItem("refreshToken", refreshToken)
+    // localStorage.setItem("refreshToken", refreshToken)
     axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${newToken}`
   }
 
   const logout = () => {
     setToken(null)
     localStorage.removeItem("token")
-    localStorage.removeItem("refreshToken")
+    // localStorage.removeItem("refreshToken")
     delete axiosInstance.defaults.headers.common["Authorization"]
     router.push("/login")
   }

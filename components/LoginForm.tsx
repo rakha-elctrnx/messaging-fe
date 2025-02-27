@@ -20,8 +20,8 @@ export default function LoginForm() {
     setError("")
 
     try {
-      const response = await axiosInstance.post("/login", { username, password })
-      login(response.data.token, response.data.refreshToken)
+      const response = await axiosInstance.post("/user/login", { username, password })
+      login(response.data.token)
       router.push("/rooms")
     } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
